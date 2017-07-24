@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h2 class="funky">Submit new website</h2>
+    <form id="website__form" action="/api/v1/create">
+      <div class="form-group">
+        <label for="website__name">Website name</label>
+        <input class="form-control" id="website__name" name="website__name" aria-describedby="emailHelp" placeholder="Enter website address">        
+      </div>
+      <div class="form-group">
+        <label for="website__freq">Frequency</label>
+        <input class="form-control" id="website__freq" name="website__freq" placeholder="Enter monitoring freq in minutes">
+      </div>      
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    <br/>
+    <h2 class="funky">Currently monitoring</h2>
+    <table class='table-hover table'>
+        <tbody>        
+        <tr>
+            <td>URL</td>
+            <td>Frequency</td>
+        </tr>
+        {% for ws in websites %}
+            <tr id="{{ws[3]}}"><td>{{ws[0]}}</td><td>{{ws[1]}}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

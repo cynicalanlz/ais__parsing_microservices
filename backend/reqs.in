@@ -1,0 +1,9 @@
+aiodns
+aiohttp
+asyncpg
+aioamqp
+uvloop
+yarl
+uritemplate
+janus
+aiohttp-jinja2
