@@ -6,6 +6,7 @@ import aiohttp_jinja2
 import jinja2
 import json
 import logging, sys, os
+import aioamqp
 
 parser = argparse.ArgumentParser(description="aiohttp server")
 parser.add_argument('--port')
@@ -64,12 +65,43 @@ class Handler:
         txt = "Hello, {}".format(name)
         return web.Response(text=txt)
 
-def init_app():
+
+    async def handle_log(message):
+        try:
+            transport, protocol = await aioamqp.connect('localhost', 5672)
+        except aioamqp.AmqpClosedConnection:
+            print("closed connections")
+            return
+
+
+        channel = await protocol.channel()
+
+        await channel.queue('logs_queue', durable=True)
+
+        message = message or "empty message"
+
+        await channel.basic_publish(
+            payload=message,
+            exchange_name='',
+            routing_key='logs_queue',
+            properties={
+                'delivery_mode': 2,
+            },
+        )
+        print(" [x] Sent %r" % message,)
+
+        await protocol.close()
+        transport.close()
+
+
+def init_app():    
     app = web.Application()
     handler = Handler()
     app.router.add_get('/', handler.front)
     app.router.add_get('/api/v1/create', handler.handle_create)
     app.router.add_get('/api/v1/delete', handler.handle_delete)
+    app.router.add_get('/api/v1/log', handler.handle_log)
+
     return app
 
 def get_port(args):
@@ -83,7 +115,7 @@ def get_port(args):
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    app = init_app()    
+    app = init_app()
 
     aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader('templates'))
     web.run_app(app, host='127.0.0.1', port=get_port(args))

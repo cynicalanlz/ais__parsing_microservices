@@ -7,7 +7,7 @@ import asyncio
 import aioamqp
 import sys, logging
 from constants import LOGGING_FORMAT
-import uvloop
+
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -42,10 +42,10 @@ async def worker():
     await channel.basic_qos(prefetch_count=1, prefetch_size=0, connection_global=False)
     await channel.basic_consume(callback, queue_name='logs_queue')
 
-if __name__=='__main__':
-    loop = uvloop.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(worker())
-    loop.run_forever()
+if _name__=='__main__':
+    event_loop = asyncio.get_event_loop()
+    event_loop.run_until_complete(worker())
+    event_loop.run_forever()
+
 
 
