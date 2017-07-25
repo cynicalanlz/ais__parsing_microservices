@@ -13,6 +13,7 @@ ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 ch.setFormatter(formatter)
 root.addHandler(ch)
+import datetime
 
 class DbClient:
     def __init__(self, pool):
@@ -24,14 +25,20 @@ class DbClient:
         qw_type = jsn.get('type', '')
         vals = []  
         resp = {}
-        print(qw_type, qw)
         async with self.pool.acquire() as connection:
             # Open a transaction.
             async with connection.transaction():
                 # Run the query passing the request argument.
                 if qw_type == 'select' and qw:
                     vals = await connection.fetch(qw)
-                    resp_vals = [tuple(item) for item in vals]
+                    resp_vals = [list(tuple(item)) for item in vals]
+                    for q in range(len(resp_vals)):
+                        item = resp_vals[q]
+                        for i in range(len(item)):
+                            it = item[i]
+                            if isinstance(it,datetime.datetime):
+                                resp_vals[q][i] = it.strftime("%Y-%m-%d %H:%M:%S")
+
                     resp = {
                         'message': 'ok',
                         'data' : resp_vals
@@ -60,9 +67,8 @@ class DbClient:
                 'correlation_id': properties.correlation_id,
             },
         )
-
-        await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
-    
+        
+        await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)        
 
 async def rpc_server():
 

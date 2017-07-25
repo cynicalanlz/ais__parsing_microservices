@@ -31,10 +31,26 @@
                     </form>
                 </td>
                 <td>
-                    <form id="website__delete__form" action="/api/v1/refresh?id={{ws[0]}}">
+                    <form id="website__delete__form" action="/api/v1/refresh">
+                          <input class="form-control" type="hidden" name="id" aria-describedby="emailHelp" value="{{ws[0]}}">
                          <button type="submit" class="btn btn-primary">Refresh</button>                        
                     </form>
                 </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <h2 class="funky">Crawl data</h2>
+    <table class='table-hover table'>
+        <tbody>        
+        <tr>
+            <td>Time</td>
+            <td>URL</td>
+            <td>Status</td>
+        </tr>
+        {% for cr in crawls %}
+            <tr id="cr{{cr[0]}}">
+                <td>{{cr[1]}}</td><td>{{cr[2]}}</td><td>{{cr[3]}}</td>
             </tr>
         {% endfor %}
         </tbody>
