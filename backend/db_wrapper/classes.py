@@ -12,7 +12,7 @@ class DbRpcClient(object):
 
     async def connect(self):
         """ an `__init__` method can't be a coroutine"""
-        self.transport, self.protocol = await aioamqp.connect()
+        self.transport, self.protocol = await aioamqp.connect(login='rabbitmq', password='rabbitmq')
         self.channel = await self.protocol.channel()
 
         result = await self.channel.queue_declare(queue_name='', exclusive=True)

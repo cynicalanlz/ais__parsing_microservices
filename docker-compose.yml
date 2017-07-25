@@ -1,0 +1,42 @@
+version: '2.1'
+
+services:
+  rabbit:
+    build: ./config/
+    hostname: "rabbit1"
+    environment:
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+      RABBITMQ_DEFAULT_VHOST: "/"
+    ports:
+      - "15672:15672"
+      - "5672:5672" 
+  
+  db:
+    build: .
+    command: [ "python", "message_db.py"] 
+    volumes:
+      - .:/backend/
+    links:
+      - rabbit:rabbit
+
+  web:
+    build: .
+    command: [ "python", "web_service.py"] 
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/backend/
+    links:
+      - db
+      - rabbit:rabbit
+
+
+  crawler:
+    build: .
+    command: [ "python", "crawler_service.py"] 
+    volumes:
+      - .:/backend/
+    links:
+      - db
+      - rabbit:rabbit

@@ -3,7 +3,7 @@ from logging.handlers import RotatingFileHandler
 import asyncio
 import aioamqp
 import uvloop
-from constants import LOGGING_FORMAT
+from constants import LOGGING_FORMAT, RABBIT
 from spider.crawler import Crawler
 from db_wrapper.classes import DbRpcClient
 from web_service import get_table
@@ -24,15 +24,18 @@ class WebsiteHandler:
             crawler = Crawler([url], loop=self.loop, db_rpc=DbRpcClient())     
             await crawler.crawl()
             crawler.close()
-            await asyncio.sleep(int(freq) * 10)
+            if freq > 0:
+                await asyncio.sleep(int(freq) * 10)
+            else:
+                return
 
     async def callback(self, channel, body, envelope, properties):    
-        logger.info(body)
+        
         await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
 
     async def worker(self):
         try:
-            transport, protocol = await aioamqp.connect('localhost', 5672)
+            transport, protocol = await aioamqp.connect(**RABBIT)
         except aioamqp.AmqpClosedConnection:
             print("closed connections")
             return

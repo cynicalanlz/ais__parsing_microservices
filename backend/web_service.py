@@ -5,6 +5,7 @@ import aiohttp_jinja2
 import jinja2
 import json
 import logging, sys, os
+from constants import RABBIT
 
 parser = argparse.ArgumentParser(description="aiohttp server")
 parser.add_argument('--port')
@@ -34,6 +35,39 @@ async def get_table(table_name):
     for item in jsn.get('data',[]):
         ws.append(tuple(item))
     return ws
+
+
+async def add_crawler_task(url,freq):    
+    qw = {
+        'url' : url,
+        'freq' : freq
+    }
+
+    message = json.dumps(qw)
+ 
+    try:
+        transport, protocol = await aioamqp.connect(**RABBIT)
+    except aioamqp.AmqpClosedConnection:
+        logging.info("closed connections")
+        return
+
+    channel = await protocol.channel()
+
+    await channel.queue('ws_queue', durable=True)
+
+    await channel.basic_publish(
+        payload=message,
+        exchange_name='',
+        routing_key='ws_queue',
+        properties={
+            'delivery_mode': 2,
+        },
+    )        
+
+    await protocol.close()
+    transport.close()
+
+    return
 
 
 class Handler:
@@ -82,7 +116,12 @@ class Handler:
         if jsn['message'] == 'ok':
             logging.info(url)
             logging.info(freq)
-        
+
+        # add task for crawler processing
+
+
+        await add_crawler_task(url, freq)
+                
         return web.HTTPFound('/')
 
     async def handle_delete(self, request):
@@ -116,7 +155,7 @@ class Handler:
             return web.Response(text=txt)
 
         try:
-            transport, protocol = await aioamqp.connect('localhost', 5672)
+            transport, protocol = await aioamqp.connect(**RABBIT)
         except aioamqp.AmqpClosedConnection:
             logging.info("closed connections")
             return

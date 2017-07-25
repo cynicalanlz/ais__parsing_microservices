@@ -21,7 +21,7 @@ async def callback(channel, body, envelope, properties):
 
 async def worker():
     try:
-        transport, protocol = await aioamqp.connect('localhost', 5672)
+        transport, protocol = await aioamqp.connect(**RABBIT)
     except aioamqp.AmqpClosedConnection:
         print("closed connections")
         return

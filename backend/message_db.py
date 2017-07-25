@@ -4,6 +4,7 @@ import asyncpg
 import json
 import uvloop
 import logging, sys
+from constants import RABBIT
 
 root = logging.getLogger()
 root.setLevel(logging.DEBUG)
@@ -72,7 +73,7 @@ class DbClient:
 
 async def rpc_server():
 
-    transport, protocol = await aioamqp.connect()
+    transport, protocol = await aioamqp.connect(**RABBIT)
     channel = await protocol.channel()
     pool = await asyncpg.create_pool(
         database='aiopg',
