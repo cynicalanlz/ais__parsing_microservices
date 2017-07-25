@@ -1,5 +1,5 @@
 # Monitoring microservices*
-docker compose solution is quite buggy because it lacks synchronization between containers, app could be run as follows
+*docker compose solution is quite buggy because it lacks synchronization between containers, app could be run as follows
 ```
 docker-compose up -d rabbit
 docker-compose up -d pg
