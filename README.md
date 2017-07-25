@@ -1,5 +1,7 @@
 # Monitoring microservices
 
+![Alt text](/monitoring_microservices.png?raw=true "Optional Title")
+
 ## Init db
 
 ```
