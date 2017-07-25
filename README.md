@@ -1,5 +1,10 @@
 # Monitoring microservices
-
+```
+backend/web_service.py - web service for task management + REST api + monitoring data display
+backend/crawler_service.py - rabbitmq based service, yields tasks from db via rabbitmq and from rabbitmq queu
+backend/message_logger.py - logs messages from ampq to file
+backend/message_db.py - makes SQL request to the db based on rabbitmq messages and returns results
+```
 ![Alt text](/website_monitoring.png?raw=true "Optional Title")
 
 ## Init db
