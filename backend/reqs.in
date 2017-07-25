@@ -7,3 +7,4 @@ yarl
 uritemplate
 janus
 aiohttp-jinja2
+uuid

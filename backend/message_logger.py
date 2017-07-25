@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-"""
-    Worker example from the 2nd tutorial
-"""
-
 import asyncio
 import aioamqp
 import sys, logging
@@ -20,13 +15,9 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-async def callback(channel, body, envelope, properties):
-    print(" [x] Received %r" % body)
+async def callback(channel, body, envelope, properties):    
     logger.info(body)
-    await asyncio.sleep(body.count(b'.'))
-    print(" [x] Done")
     await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
-
 
 async def worker():
     try:
@@ -34,7 +25,6 @@ async def worker():
     except aioamqp.AmqpClosedConnection:
         print("closed connections")
         return
-
 
     channel = await protocol.channel()
 

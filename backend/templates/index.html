@@ -9,8 +9,9 @@
       <div class="form-group">
         <label for="website__freq">Frequency</label>
         <input class="form-control" id="website__freq" name="website__freq" placeholder="Enter monitoring freq in minutes">
-      </div>      
-      <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
+      <button type="submit" class="btn btn-primary">Add</button>                        
+
     </form>
     <br/>
     <h2 class="funky">Currently monitoring</h2>
@@ -21,7 +22,20 @@
             <td>Frequency</td>
         </tr>
         {% for ws in websites %}
-            <tr id="{{ws[3]}}"><td>{{ws[0]}}</td><td>{{ws[1]}}</td></tr>
+            <tr id="ws{{ws[0]}}">
+                <td>{{ws[1]}}</td><td>{{ws[2]}}</td>
+                <td>
+                    <form id="website__delete__form" action="/api/v1/delete">
+                         <input class="form-control" type="hidden" name="id" aria-describedby="emailHelp" value="{{ws[0]}}">
+                         <button type="submit" class="btn">Delete</button>                        
+                    </form>
+                </td>
+                <td>
+                    <form id="website__delete__form" action="/api/v1/refresh?id={{ws[0]}}">
+                         <button type="submit" class="btn btn-primary">Refresh</button>                        
+                    </form>
+                </td>
+            </tr>
         {% endfor %}
         </tbody>
     </table>

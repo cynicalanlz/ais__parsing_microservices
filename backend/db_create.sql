@@ -1,0 +1,1 @@
+CREATE TABLE websites ( id serial PRIMARY KEY, url varchar(2050), freq int)
