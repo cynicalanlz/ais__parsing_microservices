@@ -14,29 +14,48 @@ services:
   
   db:
     build: .
-    command: [ "python", "message_db.py"] 
+    command: ["python", "message_db.py"] 
     volumes:
       - .:/backend/
+    depends_on:
+      - rabbit
     links:
-      - rabbit:rabbit
+      - rabbit
 
   web:
     build: .
-    command: [ "python", "web_service.py"] 
+    command: ["python", "web_service.py"] 
     ports:
       - "8080:8080"
     volumes:
       - .:/backend/
+    depends_on:
+      - db
+      - rabbit
     links:
       - db
-      - rabbit:rabbit
+      - rabbit
 
 
   crawler:
     build: .
-    command: [ "python", "crawler_service.py"] 
+    command: ["python", "crawler_service.py"] 
     volumes:
       - .:/backend/
+    depends_on:
+      - db
+      - rabbit
     links:
       - db
       - rabbit:rabbit
+
+  pg:
+    ports:
+      - "5432:5432"
+    image: postgres
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    

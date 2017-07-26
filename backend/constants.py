@@ -10,7 +10,9 @@ PG_SETTINGS={
 PG_DSN = 'dbname=aiopg user=aiopg password=aiopg host=127.0.0.1'
 
 
-RABBIT = {
-	'login' : 'rabbitmq', 
-	'password' : 'rabbitmq'
-	}
+# RABBIT = {
+# 	'login' : 'rabbitmq', 
+# 	'password' : 'rabbitmq'
+# 	}
+
+RABBIT = {}

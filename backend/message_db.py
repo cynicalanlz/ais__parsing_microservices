@@ -31,7 +31,13 @@ class DbClient:
             async with connection.transaction():
                 # Run the query passing the request argument.
                 if qw_type == 'select' and qw:
-                    vals = await connection.fetch(qw)
+                    try:
+                        vals = await connection.fetch(qw)
+                    except Exception as e:
+                        logging.error(e)
+                        resp = {
+                            'message' : 'not ok'
+                        }
                     resp_vals = [list(tuple(item)) for item in vals]
                     for q in range(len(resp_vals)):
                         item = resp_vals[q]
@@ -44,21 +50,24 @@ class DbClient:
                         'message': 'ok',
                         'data' : resp_vals
                     }
+                    
+                elif qw_type in ['insert_returning'] and qw:
+                    data = await connection.fetchval(qw)
+                    logging.info(data)
+                    resp = {
+                        'message' : 'ok',
+                        'data' : data
+                    }
+
                 elif qw_type in ['insert', 'delete'] and qw:
                     try:
                         await connection.execute(qw)
-                        resp = {
-                            'message' : 'ok'
-                        }
+                        resp = { 'message' : 'ok' }
                     except Exception as e:
-                        print(e)
-                        resp = {
-                            'message' : 'not ok'
-                        }
+                        logging.error(e)
+                        resp = { 'message' : 'not ok' }
                 else:
-                    resp = {
-                            'message' : 'not ok'
-                    }
+                    resp = { 'message' : 'ok' }
 
         await channel.basic_publish(
             payload=json.dumps(resp),

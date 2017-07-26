@@ -6,6 +6,8 @@ import jinja2
 import json
 import logging, sys, os
 from constants import RABBIT
+import aioamqp
+import redis
 
 parser = argparse.ArgumentParser(description="aiohttp server")
 parser.add_argument('--port')
@@ -19,13 +21,12 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 ch.setFormatter(formatter)
 root.addHandler(ch)
 
-
 from db_wrapper.classes import DbRpcClient
 
-async def get_table(table_name):
+async def get_table(table_name, query_format='SELECT * from {};'):
     qw = {
         'type'  : 'select', 
-        'query' : 'SELECT * from {};'.format(table_name)
+        'query' : query_format.format(table_name)
     }
 
     db_rpc = DbRpcClient()
@@ -37,13 +38,16 @@ async def get_table(table_name):
     return ws
 
 
-async def add_crawler_task(url,freq):    
+async def add_crawler_task(url,freq, ws_id):
+    logging.info('adding crawler task')
     qw = {
         'url' : url,
-        'freq' : freq
+        'freq' : freq,
+        'ws_id' : ws_id
     }
 
     message = json.dumps(qw)
+    logging.info(message)
  
     try:
         transport, protocol = await aioamqp.connect(**RABBIT)
@@ -69,16 +73,15 @@ async def add_crawler_task(url,freq):
 
     return
 
-
 class Handler:
 
     def __init__(self):
-        pass
+        self.redis = redis.ConnectionPool(host='localhost', port=6379, db=0)
 
     async def front(self, request):
 
         ws = await get_table('websites')
-        crawls = await get_table('crawls')
+        crawls = await get_table('crawls', query_format='SELECT * from {} order by date desc')
 
         context = {
             'title' : 'Website processing queue',
@@ -105,22 +108,28 @@ class Handler:
             return web.Response(text=rsp)
 
         qw = {
-            'type'  : 'insert', 
-            'query' : "INSERT INTO websites (url, freq) VALUES ('{}',{});".format(url,freq)
+            'type'  : 'insert_returning', 
+            'query' : "INSERT INTO websites (url, freq) VALUES ('{}',{}) RETURNING id;".format(url,freq)
         }
 
         db_rpc = DbRpcClient()
         db_response = await db_rpc.call(json.dumps(qw))
         jsn = json.loads(db_response.decode('utf-8'))
         
-        if jsn['message'] == 'ok':
-            logging.info(url)
-            logging.info(freq)
+        if not jsn['message'] == 'ok':
+            rsp = json.dumps(
+                { 'error' : 'db returned error'}
+            )
+            return web.Response(text=rsp)
+
+        ws_id = jsn['data']
+
+        redis_conn = redis.Redis(connection_pool=self.redis)
+        redis_conn.set(ws_id, freq)
 
         # add task for crawler processing
-
-
-        await add_crawler_task(url, freq)
+        
+        await add_crawler_task(url, freq, ws_id)
                 
         return web.HTTPFound('/')
 
@@ -133,7 +142,6 @@ class Handler:
             'type'  : 'delete', 
             'query' : "DELETE from websites where id={}".format(ws_id)
         }
-        print(qw)
 
         db_rpc = DbRpcClient()
         db_response = await db_rpc.call(json.dumps(qw))
@@ -141,6 +149,9 @@ class Handler:
 
         if jsn['message'] == 'ok':
             logging.info('Deleted' + ws_id)
+
+        redis_conn = redis.Redis(connection_pool=self.redis)
+        redis_conn.set(ws_id, -1)
         
         return web.HTTPFound('/')
 
@@ -179,9 +190,9 @@ class Handler:
 
         return web.Response(text='ok')
 
-
     async def handle_refresh(self, request):
-        ws_id= request.query.get('id', '')
+        ws_id= request.query.get('id', '')        
+        await add_crawler_task(url, 0)
         return web.HTTPFound('/')
 
 

@@ -3,16 +3,18 @@ import aioamqp
 import uuid
 
 class DbRpcClient(object):
-    def __init__(self):
+    def __init__(self, login='guest', password='guest'):
         self.transport = None
         self.protocol = None
         self.channel = None
         self.callback_queue = None
         self.waiter = asyncio.Event()
+        self.login = login 
+        self.password = password
 
     async def connect(self):
         """ an `__init__` method can't be a coroutine"""
-        self.transport, self.protocol = await aioamqp.connect(login='rabbitmq', password='rabbitmq')
+        self.transport, self.protocol = await aioamqp.connect(login=self.login, password=self.password)
         self.channel = await self.protocol.channel()
 
         result = await self.channel.queue_declare(queue_name='', exclusive=True)
