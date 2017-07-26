@@ -1,10 +1,21 @@
-# Monitoring microservices
+# Monitoring microservices*
+*docker compose solution is quite buggy because it lacks synchronization between containers, app could be run as follows
+```
+docker-compose up -d rabbit
+docker-compose up -d pg
+python backend/web_service.py
+python backend/message_db.py
+python backend/crawler_service.py
+```
 ```
 backend/web_service.py - web service for task management + REST api + monitoring data display
 backend/crawler_service.py - rabbitmq based service, yields tasks from db via rabbitmq and from rabbitmq queu
 backend/message_logger.py - logs messages from ampq to file
 backend/message_db.py - makes SQL request to the db based on rabbitmq messages and returns results
 ```
+
+
+
 ![Alt text](/website_monitoring.png?raw=true "Optional Title")
 
 ## Init db
