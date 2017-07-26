@@ -3,6 +3,7 @@
 ```
 docker-compose up -d rabbit
 docker-compose up -d pg
+docker-compose up -d redis
 python backend/web_service.py
 python backend/message_db.py
 python backend/crawler_service.py
