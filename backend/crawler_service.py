@@ -28,17 +28,22 @@ class WebsiteHandler:
             ws_freq_check = redis_conn.get(ws_id)
 
             if not ws_freq_check or not int(ws_freq_check) >= 0:
-                logging.info('got delete signal {}'.format(str(ws_id)))
+                logging.info('got shutdown signal {}'.format(str(ws_id)))
                 break
 
             crawler = Crawler([url], loop=self.loop, db_rpc=DbRpcClient())
             await crawler.crawl()
             crawler.close()
 
-            if not freq > 0:
-                break
+            await asyncio.sleep(int(freq) * 60)
 
-            await asyncio.sleep(int(freq) * 5)
+
+    async def one_time_crawler(self, url, freq, ws_id):
+      
+        crawler = Crawler([url], loop=self.loop, db_rpc=DbRpcClient())
+        await crawler.crawl()
+        crawler.close()
+
                 
     async def callback(self, channel, body, envelope, properties):
 
@@ -54,25 +59,23 @@ class WebsiteHandler:
 
         url = jsn['url']
         freq = int(jsn['freq'])
-        ws_id = int(jsn['ws_id'])        
-     
-        return asyncio.Task(self.timed_crawler(url, freq, ws_id), loop=self.loop)
+        ws_id = int(jsn['ws_id'])
+
+        if freq == 0:
+            return asyncio.Task(self.one_time_crawler(url, freq, ws_id), loop=self.loop)
+        else:
+            return asyncio.Task(self.timed_crawler(url, freq, ws_id), loop=self.loop)
         
         
     async def worker(self):
-
-
         ws = await get_table('websites')
-
         workers = []
-
         redis_conn = redis.Redis(connection_pool=self.redis)
-
+        
         for website in ws:
             workers.append(asyncio.Task(self.timed_crawler(website[1], website[2], website[0]), loop=self.loop))
             redis_conn.set(website[0], website[2])
-
-        
+    
         try:
             transport, protocol = await aioamqp.connect(**RABBIT)
         except aioamqp.AmqpClosedConnection:

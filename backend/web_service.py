@@ -191,8 +191,9 @@ class Handler:
         return web.Response(text='ok')
 
     async def handle_refresh(self, request):
-        ws_id= request.query.get('id', '')        
-        await add_crawler_task(url, 0)
+        ws_id = request.query.get('id', '')
+        url = request.query.get('url', '')        
+        await add_crawler_task(url, 0, ws_id)        
         return web.HTTPFound('/')
 
 

@@ -31,8 +31,9 @@
                     </form>
                 </td>
                 <td>
-                    <form id="website__delete__form" action="/api/v1/refresh">
-                          <input class="form-control" type="hidden" name="id" aria-describedby="emailHelp" value="{{ws[0]}}">
+                    <form id="website__refresh__form" action="/api/v1/refresh">
+                          <input class="form-control" type="hidden" name="id" value="{{ws[0]}}">
+                          <input class="form-control" type="hidden" name="url" value="{{ws[1]}}">
                          <button type="submit" class="btn btn-primary">Refresh</button>                        
                     </form>
                 </td>

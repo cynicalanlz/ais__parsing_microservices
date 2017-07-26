@@ -11,43 +11,6 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672" 
-  
-  db:
-    build: .
-    command: ["python", "message_db.py"] 
-    volumes:
-      - .:/backend/
-    depends_on:
-      - rabbit
-    links:
-      - rabbit
-
-  web:
-    build: .
-    command: ["python", "web_service.py"] 
-    ports:
-      - "8080:8080"
-    volumes:
-      - .:/backend/
-    depends_on:
-      - db
-      - rabbit
-    links:
-      - db
-      - rabbit
-
-
-  crawler:
-    build: .
-    command: ["python", "crawler_service.py"] 
-    volumes:
-      - .:/backend/
-    depends_on:
-      - db
-      - rabbit
-    links:
-      - db
-      - rabbit:rabbit
 
   pg:
     ports:
@@ -57,5 +20,49 @@ services:
   redis:
     image: redis
     ports:
-      - "6379:6379"
-    
+      - "6379:6379"    
+  
+  db:
+    build: .
+    command: ["python", "message_db.py"] 
+    volumes:
+      - .:/backend/
+    depends_on:
+      - rabbit
+      - pg
+      - redis
+    links:
+      - rabbit
+      - pg
+      - redis
+
+  web:
+    build: .
+    command: ["python", "web_service.py"] 
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/backend/
+    depends_on:
+      - rabbit
+      - pg
+      - redis
+    links:
+      - rabbit
+      - pg
+      - redis
+
+  crawler:
+    build: .
+    command: ["python", "crawler_service.py"] 
+    volumes:
+      - .:/backend/
+    depends_on:
+      - rabbit
+      - pg
+      - redis
+    links:
+      - rabbit
+      - pg
+      - redis
+
