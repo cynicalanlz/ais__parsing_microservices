@@ -27,11 +27,11 @@ class WebsiteHandler:
         while True:
             ws_freq_check = redis_conn.get(ws_id)
 
-            if not ws_freq_check or not int(ws_id) >= 0:
+            if not ws_freq_check or not int(ws_freq_check) >= 0:
                 logging.info('got delete signal {}'.format(str(ws_id)))
                 break
 
-            crawler = Crawler([url],  db_rpc=DbRpcClient())
+            crawler = Crawler([url], loop=self.loop, db_rpc=DbRpcClient())
             await crawler.crawl()
             crawler.close()
 
@@ -54,15 +54,11 @@ class WebsiteHandler:
 
         url = jsn['url']
         freq = int(jsn['freq'])
-        ws_id = int(jsn['ws_id'])
-
-        logging.info(url, freq, ws_id)
+        ws_id = int(jsn['ws_id'])        
      
-        await self.timed_crawler(url, freq, ws_id)
+        return asyncio.Task(self.timed_crawler(url, freq, ws_id), loop=self.loop)
         
         
-
-
     async def worker(self):
 
 
